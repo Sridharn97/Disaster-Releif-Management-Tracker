@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useTheme } from "next-themes";
 import { getDisasters, getCenters, getDispatches } from '@/data/mockData';
 // Fix default marker icons
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -32,11 +33,15 @@ const dispatchIcon = new L.DivIcon({
     iconAnchor: [7, 7],
 });
 export default function MapView() {
+    const { theme } = useTheme();
     const data = useMemo(() => ({
         disasters: getDisasters().filter(d => d.status !== 'Resolved'),
         centers: getCenters(),
         dispatches: getDispatches().filter(d => d.status === 'In Transit' || d.status === 'Pending'),
     }), []);
+    const tilesUrl = theme === "dark"
+        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
     return (<div className="space-y-4">
       <header>
         <h1 className="command-header">Operations Map</h1>
@@ -65,7 +70,7 @@ export default function MapView() {
           LIVE_MAP_FEED
         </div>
         <MapContainer center={[20.5937, 78.9629]} zoom={5} className="h-full w-full" style={{ background: 'hsl(var(--background))' }}>
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution='&copy; OpenStreetMap'/>
+          <TileLayer url={tilesUrl} attribution='&copy; OpenStreetMap'/>
 
           {/* Disaster markers with radius */}
           {data.disasters.map(d => (<React.Fragment key={d.id}>

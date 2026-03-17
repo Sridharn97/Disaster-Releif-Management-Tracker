@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff } from 'lucide-react';
+import { useTheme } from "next-themes";
+import { Eye, EyeOff, Sun, Moon } from 'lucide-react';
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPass, setShowPass] = useState(false);
     const [error, setError] = useState('');
     const { login } = useAuth();
+    const { theme, setTheme } = useTheme();
     const navigate = useNavigate();
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -24,6 +26,16 @@ export default function Login() {
     };
     return (<div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        <div className="flex justify-end mb-3">
+          <button
+            type="button"
+            aria-label="Toggle theme"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="inline-flex items-center justify-center rounded-md border border-border bg-card/80 p-2 text-foreground shadow-sm hover:bg-card"
+          >
+            {theme === "dark" ? <Moon className="h-4 w-4"/> : <Sun className="h-4 w-4"/>}
+          </button>
+        </div>
         {/* Header */}
         <div className="text-center mb-8">
           <img src="/Logo.jpg" alt="ReliefGrid" className="mx-auto mb-4 h-14 w-14 rounded-full object-contain bg-card border border-border"/>

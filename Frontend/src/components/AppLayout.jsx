@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { LayoutDashboard, AlertTriangle, Building2, Package, Users, Truck, Map, LogOut, Menu, X, ChevronRight } from 'lucide-react';
+import { useTheme } from "next-themes";
+import { LayoutDashboard, AlertTriangle, Building2, Package, Users, Truck, Map, LogOut, Menu, X, ChevronRight, Sun, Moon } from 'lucide-react';
 const adminLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/disasters', label: 'Disasters', icon: AlertTriangle },
@@ -26,6 +27,7 @@ export default function AppLayout({ children }) {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { theme, setTheme } = useTheme();
     const links = user?.role === 'admin' ? adminLinks : user?.role === 'volunteer' ? volunteerLinks : coordinatorLinks;
     const handleLogout = () => {
         logout();
@@ -99,6 +101,15 @@ export default function AppLayout({ children }) {
             <Menu className="w-5 h-5"/>
           </button>
           <div className="flex-1"/>
+          <button
+            type="button"
+            aria-label="Toggle theme"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-card/80 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm hover:bg-card"
+          >
+            {theme === "dark" ? <Moon className="h-4 w-4"/> : <Sun className="h-4 w-4"/>}
+            <span className="hidden sm:inline">{theme === "dark" ? "Dark" : "Light"}</span>
+          </button>
         </header>
 
         {/* Page content */}
