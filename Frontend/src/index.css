@@ -8,7 +8,8 @@
   :root {
     color-scheme: light;
 
-    --background: 0 0% 100%;
+    /* Soft light theme (not pure white) */
+    --background: 214 32% 96%;
     --foreground: 240 10% 3.9%;
 
     --card: 0 0% 100%;
@@ -20,13 +21,13 @@
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4.8% 95.9%;
+    --secondary: 214 32% 93%;
     --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 240 4.8% 95.9%;
+    --muted: 214 32% 93%;
     --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 240 4.8% 95.9%;
+    --accent: 214 32% 93%;
     --accent-foreground: 240 5.9% 10%;
 
     --destructive: 0 84% 60%;
@@ -38,19 +39,19 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 0%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
+    --border: 214 25% 87%;
+    --input: 214 25% 87%;
     --ring: 217 91% 60%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 240 4.8% 97.9%;
+    --sidebar-background: 214 32% 94%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 214 32% 90%;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 240 5.9% 90%;
+    --sidebar-border: 214 25% 84%;
     --sidebar-ring: 217 91% 60%;
 
     --severity-critical: 0 84% 60%;
@@ -122,6 +123,11 @@
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-image:
+      radial-gradient(900px circle at 0% 0%, hsl(var(--primary) / 0.10), transparent 45%),
+      radial-gradient(900px circle at 100% 0%, hsl(var(--success) / 0.06), transparent 50%),
+      radial-gradient(1200px circle at 50% 110%, hsl(var(--warning) / 0.05), transparent 55%);
+    background-attachment: fixed;
   }
 
   .font-mono {
@@ -131,10 +137,10 @@
 
 @layer components {
   .stat-card {
-    @apply bg-card border border-border rounded-lg p-4 transition-all duration-150;
+    @apply bg-card/80 border border-border rounded-lg p-4 shadow-sm backdrop-blur transition-all duration-150;
   }
   .stat-card:hover {
-    @apply border-primary/30;
+    @apply border-primary/30 shadow-md;
   }
 
   .command-header {
@@ -169,7 +175,7 @@
   }
 
   .input-field {
-    @apply w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary;
+    @apply w-full bg-card border border-border rounded-md px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary;
   }
 
   .btn-primary {

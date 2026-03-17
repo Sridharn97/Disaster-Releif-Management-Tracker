@@ -45,6 +45,7 @@ export default function AppLayout({ children }) {
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
+          <img src="/Logo.jpg" alt="ReliefGrid" className="h-9 w-9 rounded-full object-contain bg-card border border-border"/>
           <div>
             <div className="text-sm font-bold tracking-tight text-foreground">ReliefGrid</div>
             <div className="text-[10px] font-mono text-muted-foreground">COMMAND CENTER</div>
@@ -93,7 +94,7 @@ export default function AppLayout({ children }) {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex items-center gap-4 px-4 py-3 border-b border-border lg:px-6">
+        <header className="flex items-center gap-4 px-4 py-3 border-b border-border bg-card/60 backdrop-blur lg:px-6">
           <button className="lg:hidden text-muted-foreground" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5"/>
           </button>

@@ -26,6 +26,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
+          <img src="/Logo.jpg" alt="ReliefGrid" className="mx-auto mb-4 h-14 w-14 rounded-full object-contain bg-card border border-border"/>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">ReliefGrid</h1>
           <p className="text-sm text-muted-foreground mt-1 font-mono">DISASTER RELIEF MANAGEMENT TRACKER</p>
         </div>
