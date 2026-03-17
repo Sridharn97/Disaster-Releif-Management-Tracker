@@ -46,7 +46,7 @@ export default function AppLayout({ children }) {
       `}>
         <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
           <div>
-            <div className="text-sm font-bold tracking-tight text-foreground">DRRT</div>
+            <div className="text-sm font-bold tracking-tight text-foreground">ReliefGrid</div>
             <div className="text-[10px] font-mono text-muted-foreground">COMMAND CENTER</div>
           </div>
           <button className="ml-auto lg:hidden text-muted-foreground" onClick={() => setSidebarOpen(false)}>

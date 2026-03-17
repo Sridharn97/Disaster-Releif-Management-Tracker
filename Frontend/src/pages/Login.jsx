@@ -26,8 +26,8 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">DRRT Command</h1>
-          <p className="text-sm text-muted-foreground mt-1 font-mono">DISASTER RELIEF RESOURCE TRACKER</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">ReliefGrid</h1>
+          <p className="text-sm text-muted-foreground mt-1 font-mono">DISASTER RELIEF MANAGEMENT TRACKER</p>
         </div>
 
         {/* Form */}
@@ -64,16 +64,6 @@ export default function Login() {
             <Link to="/signup" className="text-xs text-primary hover:underline">
               Create new account →
             </Link>
-          </div>
-        </div>
-
-        {/* Demo creds */}
-        <div className="mt-6 bg-card/50 border border-border rounded-lg p-4">
-          <div className="system-label mb-2">Demo Credentials</div>
-          <div className="space-y-1 text-xs font-mono text-muted-foreground">
-            <div><span className="text-red-400">Admin:</span> admin@relief.org / admin123</div>
-            <div><span className="text-blue-400">Volunteer:</span> volunteer@relief.org / vol123</div>
-            <div><span className="text-green-400">Coordinator:</span> coord@relief.org / coord123</div>
           </div>
         </div>
       </div>

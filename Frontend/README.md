@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# ReliefGrid
 
-TODO: Document your project here
+Disaster Relief Management Tracker
