@@ -15,6 +15,7 @@ import Volunteers from "@/pages/Volunteers";
 import DispatchPage from "@/pages/DispatchPage";
 import MapView from "@/pages/MapView";
 import NotFound from "@/pages/NotFound";
+
 const queryClient = new QueryClient();
 function ProtectedRoute({ children }) {
     const { isAuthenticated } = useAuth();
