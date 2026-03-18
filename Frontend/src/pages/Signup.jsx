@@ -3,6 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
+
+const roles = [
+    { value: 'volunteer', label: 'Volunteer' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'user', label: 'User' },
+];
+
 export default function Signup() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -12,9 +19,13 @@ export default function Signup() {
     const { signup } = useAuth();
     const { theme, setTheme } = useTheme();
     const navigate = useNavigate();
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        if (role === 'user') {
+            navigate('/disasters?report=true');
+            return;
+        }
         if (!name || !email || !password) {
             setError('All fields required');
             return;
@@ -23,11 +34,11 @@ export default function Signup() {
             setError('Password must be at least 6 characters');
             return;
         }
-        const ok = signup(name, email, password, role);
-        if (ok)
+        const result = await signup(name, email, password, role);
+        if (result.success)
             navigate('/dashboard');
         else
-            setError('Email already exists');
+            setError(result.message || 'Email already exists');
     };
     return (<div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -57,28 +68,29 @@ export default function Signup() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="system-label mb-1.5 block">Full Name</label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} className="input-field" placeholder="John Doe"/>
-            </div>
-            <div>
-              <label className="system-label mb-1.5 block">Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input-field" placeholder="you@example.com"/>
-            </div>
-            <div>
-              <label className="system-label mb-1.5 block">Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="input-field" placeholder="Min 6 characters"/>
-            </div>
-            <div>
               <label className="system-label mb-1.5 block">Role</label>
-              <div className="grid grid-cols-3 gap-2">
-                {['admin', 'volunteer', 'coordinator'].map(r => (<button key={r} type="button" onClick={() => setRole(r)} className={`px-3 py-2 rounded-md text-xs font-bold uppercase border transition-colors ${role === r
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-secondary text-muted-foreground border-border hover:border-primary/30'}`}>
-                    {r}
-                  </button>))}
-              </div>
+              <select value={role} onChange={e => setRole(e.target.value)} className="input-field">
+                {roles.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
+              </select>
             </div>
-            <button type="submit" className="btn-primary w-full">Create Account</button>
+            {role !== 'user' && (<>
+                <div>
+                  <label className="system-label mb-1.5 block">Full Name</label>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} className="input-field" placeholder="John Doe"/>
+                </div>
+                <div>
+                  <label className="system-label mb-1.5 block">Email</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input-field" placeholder="you@example.com"/>
+                </div>
+                <div>
+                  <label className="system-label mb-1.5 block">Password</label>
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="input-field" placeholder="Min 6 characters"/>
+                </div>
+              </>)}
+            <div className="text-xs text-muted-foreground bg-secondary/40 border border-border rounded-md px-3 py-2">
+              {role === 'user' ? 'Users do not need an account. Continue to the disaster report page.' : 'Create an account for the selected role.'}
+            </div>
+            <button type="submit" className="btn-primary w-full">{role === 'user' ? 'Continue to Report' : 'Create Account'}</button>
           </form>
 
           <div className="text-center">
@@ -88,3 +100,4 @@ export default function Signup() {
       </div>
     </div>);
 }
+

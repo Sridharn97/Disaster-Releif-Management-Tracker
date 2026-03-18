@@ -3,26 +3,38 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from "next-themes";
 import { Eye, EyeOff, Sun, Moon } from 'lucide-react';
+
+const roles = [
+    { value: 'volunteer', label: 'Volunteer' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'user', label: 'User' },
+];
+
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [role, setRole] = useState('volunteer');
     const [showPass, setShowPass] = useState(false);
     const [error, setError] = useState('');
     const { login } = useAuth();
     const { theme, setTheme } = useTheme();
     const navigate = useNavigate();
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        if (role === 'user') {
+            navigate('/disasters?report=true');
+            return;
+        }
         if (!email || !password) {
             setError('All fields required');
             return;
         }
-        const ok = login(email, password);
-        if (ok)
+        const result = await login(email, password, role);
+        if (result.success)
             navigate('/dashboard');
         else
-            setError('Invalid credentials');
+            setError(result.message || 'Invalid credentials');
     };
     return (<div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -56,22 +68,34 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="system-label mb-1.5 block">Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input-field" placeholder="admin@relief.org"/>
+              <label className="system-label mb-1.5 block">Role</label>
+              <select value={role} onChange={e => setRole(e.target.value)} className="input-field">
+                {roles.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
+              </select>
             </div>
-            <div>
-              <label className="system-label mb-1.5 block">Password</label>
-              <div className="relative">
-                <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} className="input-field pr-10" placeholder="••••••••"/>
-                <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  {showPass ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}
-                </button>
-              </div>
-            </div>
+            {role !== 'user' && (<>
+                <div>
+                  <label className="system-label mb-1.5 block">Email</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input-field" placeholder="admin@relief.org"/>
+                </div>
+                <div>
+                  <label className="system-label mb-1.5 block">Password</label>
+                  <div className="relative">
+                    <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} className="input-field pr-10" placeholder="Password"/>
+                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      {showPass ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}
+                    </button>
+                  </div>
+                </div>
+              </>)}
             <button type="submit" className="btn-primary w-full">
-              Authenticate
+              {role === 'user' ? 'Continue to Report' : 'Authenticate'}
             </button>
           </form>
+
+          {role === 'user' && (<div className="text-xs text-muted-foreground bg-secondary/40 border border-border rounded-md px-3 py-2">
+              Users do not need an account. Continue to report a disaster directly.
+            </div>)}
 
           <div className="text-center">
             <Link to="/signup" className="text-xs text-primary hover:underline">
@@ -82,3 +106,4 @@ export default function Login() {
       </div>
     </div>);
 }
+

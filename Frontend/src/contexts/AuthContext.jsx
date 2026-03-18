@@ -1,55 +1,78 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import api, { TOKEN_KEY, SESSION_KEY } from '@/lib/api';
 const AuthContext = createContext(null);
-const USERS_KEY = 'drrt_users';
-const SESSION_KEY = 'drrt_session';
-const defaultUsers = [
-    { id: '1', name: 'Admin User', email: 'admin@relief.org', password: 'admin123', role: 'admin', phone: '+1234567890' },
-    { id: '2', name: 'John Volunteer', email: 'volunteer@relief.org', password: 'vol123', role: 'volunteer', phone: '+1234567891' },
-    { id: '3', name: 'Sarah Coordinator', email: 'coord@relief.org', password: 'coord123', role: 'coordinator', phone: '+1234567892' },
-];
-function getStoredUsers() {
-    const stored = localStorage.getItem(USERS_KEY);
-    if (stored)
-        return JSON.parse(stored);
-    localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
-    return defaultUsers;
-}
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    useEffect(() => {
+    const [user, setUser] = useState(() => {
         const session = localStorage.getItem(SESSION_KEY);
-        if (session) {
-            setUser(JSON.parse(session));
+        return session ? JSON.parse(session) : null;
+    });
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) {
+            setLoading(false);
+            return;
         }
+        api.get('/auth/profile')
+            .then((response) => {
+            const profile = response.data.data;
+            setUser(profile);
+            localStorage.setItem(SESSION_KEY, JSON.stringify(profile));
+        })
+            .catch(() => {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(SESSION_KEY);
+            setUser(null);
+        })
+            .finally(() => setLoading(false));
     }, []);
-    const login = (email, password) => {
-        const users = getStoredUsers();
-        const found = users.find((u) => u.email === email && u.password === password);
-        if (found) {
-            const { password: _, ...userData } = found;
-            setUser(userData);
-            localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
-            return true;
-        }
-        return false;
-    };
-    const signup = (name, email, password, role) => {
-        const users = getStoredUsers();
-        if (users.find((u) => u.email === email))
-            return false;
-        const newUser = { id: crypto.randomUUID(), name, email, password, role, phone: '' };
-        users.push(newUser);
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-        const { password: _, ...userData } = newUser;
-        setUser(userData);
+    const persistSession = (token, userData) => {
+        localStorage.setItem(TOKEN_KEY, token);
         localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
-        return true;
+        setUser(userData);
+    };
+    const login = async (email, password, role) => {
+        try {
+            const response = await api.post('/auth/login', { email, password });
+            if (role && response.data.user?.role !== role) {
+                return {
+                    success: false,
+                    message: `This account is registered as ${response.data.user?.role || 'a different role'}`,
+                };
+            }
+            persistSession(response.data.token, response.data.user);
+            return { success: true };
+        }
+        catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Invalid credentials',
+            };
+        }
+    };
+    const signup = async (name, email, password, role) => {
+        try {
+            const response = await api.post('/auth/signup', { name, email, password, role });
+            persistSession(response.data.token, response.data.user);
+            return { success: true };
+        }
+        catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Unable to create account',
+            };
+        }
     };
     const logout = () => {
         setUser(null);
+        localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(SESSION_KEY);
     };
-    return (<AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user }}>
+    const updateUserSession = (userData) => {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
+        setUser(userData);
+    };
+    return (<AuthContext.Provider value={{ user, login, signup, logout, updateUserSession, isAuthenticated: !!user, loading }}>
       {children}
     </AuthContext.Provider>);
 }
