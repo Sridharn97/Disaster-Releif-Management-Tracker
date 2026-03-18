@@ -12,8 +12,9 @@ Production-ready Express and MongoDB API for the Disaster Relief Resource Tracke
 ## Environment Variables
 
 - `PORT=5000`
-- `MONGO_URI=mongodb://localhost:27017/disasterDB`
+- `MONGO_URI=<mongodb connection string>`
 - `JWT_SECRET=replace-with-a-strong-secret`
+- `CLIENT_URL=<frontend production url>`
 - `CORS_ORIGIN=http://localhost:5173`
 
 ## Base URL
@@ -91,7 +92,8 @@ Production-ready Express and MongoDB API for the Disaster Relief Resource Tracke
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api"
+  baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: true
 });
 
 api.interceptors.request.use((config) => {
@@ -104,3 +106,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 ```
+
+## Deployment
+
+### Backend on Render
+
+- Build command: `npm install`
+- Start command: `npm start`
+- Environment variables:
+  - `PORT=5000`
+  - `MONGO_URI=<mongodb atlas connection string>`
+  - `JWT_SECRET=<secure random string>`
+  - `CLIENT_URL=<your vercel frontend url>`
+
+### Frontend on Vercel
+
+- Build command: `npm run build`
+- Output directory: `dist`
+- Environment variable:
+  - `VITE_API_URL=https://your-render-service.onrender.com/api`
