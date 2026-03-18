@@ -15,6 +15,7 @@ const adminLinks = [
 const volunteerLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/disasters', label: 'Disaster Zones', icon: AlertTriangle },
+    { to: '/centers', label: 'Relief Centers', icon: Building2 },
     { to: '/map', label: 'Map View', icon: Map },
     { to: '/profile', label: 'Profile', icon: IdCard },
 ];

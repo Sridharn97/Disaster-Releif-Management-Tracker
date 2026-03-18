@@ -43,6 +43,14 @@ function DisasterRoute() {
         return <AppLayout><Disasters /></AppLayout>;
     return <UserReportLayout><Disasters /></UserReportLayout>;
 }
+function CentersRoute() {
+    const { isAuthenticated, loading } = useAuth();
+    if (loading)
+        return null;
+    if (isAuthenticated)
+        return <AppLayout><Centers /></AppLayout>;
+    return <UserReportLayout><Centers /></UserReportLayout>;
+}
 const App = () => (<QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <TooltipProvider>
@@ -55,7 +63,7 @@ const App = () => (<QueryClientProvider client={queryClient}>
               <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>}/>
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}/>
               <Route path="/disasters" element={<DisasterRoute />}/>
-              <Route path="/centers" element={<ProtectedRoute><Centers /></ProtectedRoute>}/>
+              <Route path="/centers" element={<CentersRoute />}/>
               <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>}/>
               <Route path="/volunteers" element={<ProtectedRoute><Volunteers /></ProtectedRoute>}/>
               <Route path="/dispatch" element={<ProtectedRoute><DispatchPage /></ProtectedRoute>}/>

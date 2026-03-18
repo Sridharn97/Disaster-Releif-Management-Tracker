@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useTheme } from "next-themes";
-import { AlertTriangle, ChevronRight, Menu, X, Sun, Moon, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, Building2, ChevronRight, Menu, X, Sun, Moon, ArrowLeft } from 'lucide-react';
 
 const guestLinks = [
     { to: '/disasters?report=true', label: 'Report Disaster', icon: AlertTriangle },
+    { to: '/centers', label: 'Relief Centers', icon: Building2 },
 ];
 
 export default function UserReportLayout({ children }) {

@@ -3,6 +3,7 @@ import api from '@/lib/api';
 import CenterLocationPicker from '@/components/CenterLocationPicker';
 import { Plus, X, MapPin, Phone, User } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useAuth } from '@/contexts/AuthContext';
 
 const createEmptyForm = () => ({
     name: '',
@@ -14,6 +15,8 @@ const createEmptyForm = () => ({
 });
 
 export default function Centers() {
+    const { user } = useAuth();
+    const canManage = user?.role === 'admin';
     const [centers, setCenters] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [editId, setEditId] = useState(null);
@@ -40,8 +43,17 @@ export default function Centers() {
         fetchCenters();
     }, [fetchCenters]);
 
+    useEffect(() => {
+        if (!canManage) {
+            setShowForm(false);
+            setEditId(null);
+        }
+    }, [canManage]);
+
     const handleAdd = async (e) => {
         e.preventDefault();
+        if (!canManage)
+            return;
         if (form.latitude === '' || form.longitude === '') {
             setPageError('Please select the relief center location on the map');
             return;
@@ -73,6 +85,8 @@ export default function Centers() {
     };
 
     const handleEdit = (c) => {
+        if (!canManage)
+            return;
         setForm({
             name: c.name,
             contactPerson: c.contactPerson,
@@ -91,14 +105,14 @@ export default function Centers() {
           <h1 className="command-header">Relief Centers</h1>
           <p className="system-label mt-1">{centers.length} CENTERS OPERATIONAL</p>
         </div>
-        <button onClick={() => { setShowForm(!showForm); setEditId(null); setForm(createEmptyForm()); }} className={showForm ? 'btn-secondary' : 'btn-primary'}>
-          {showForm ? <><X className="w-4 h-4 mr-1 inline"/>Cancel</> : <><Plus className="w-4 h-4 mr-1 inline"/>Add Center</>}
-        </button>
+        {canManage && (<button onClick={() => { setShowForm(!showForm); setEditId(null); setForm(createEmptyForm()); }} className={showForm ? 'btn-secondary' : 'btn-primary'}>
+            {showForm ? <><X className="w-4 h-4 mr-1 inline"/>Cancel</> : <><Plus className="w-4 h-4 mr-1 inline"/>Add Center</>}
+          </button>)}
       </header>
 
       {pageError && <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 px-3 py-2 rounded-md">{pageError}</div>}
 
-      {showForm && (<form onSubmit={handleAdd} className="bg-card border border-border rounded-lg p-5 space-y-4">
+      {canManage && showForm && (<form onSubmit={handleAdd} className="bg-card border border-border rounded-lg p-5 space-y-4">
           <h3 className="text-sm font-bold flex items-center gap-2">
             <span className="w-1.5 h-5 bg-primary rounded-full block"/>
             {editId ? 'EDIT CENTER' : 'NEW RELIEF CENTER'}
@@ -143,7 +157,7 @@ export default function Centers() {
                   <div className="text-xs text-muted-foreground mt-0.5">{c.locationName || c.location}</div>
                 </div>
               </div>
-              <button onClick={(e) => { e.stopPropagation(); handleEdit(c); }} className="text-xs text-primary hover:underline">Edit</button>
+              {canManage && (<button onClick={(e) => { e.stopPropagation(); handleEdit(c); }} className="text-xs text-primary hover:underline">Edit</button>)}
             </div>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div>Contact: {c.contactPerson}</div>
