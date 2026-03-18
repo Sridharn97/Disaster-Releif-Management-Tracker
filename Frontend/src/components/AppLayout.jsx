@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from "next-themes";
-import { LayoutDashboard, AlertTriangle, Building2, Package, Users, Truck, Map, LogOut, Menu, X, ChevronRight, Sun, Moon, IdCard } from 'lucide-react';
+import { LayoutDashboard, AlertTriangle, Building2, Package, Users, Truck, Map, LogOut, Menu, X, ChevronRight, Sun, Moon, IdCard, Search } from 'lucide-react';
 const adminLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/disasters', label: 'Disasters', icon: AlertTriangle },
@@ -24,12 +24,79 @@ export default function AppLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { theme, setTheme } = useTheme();
     const links = user?.role === 'admin' ? adminLinks : volunteerLinks;
+    const [searchValue, setSearchValue] = useState('');
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
-    const roleLabel = user?.role === 'admin' ? 'ADMIN' : 'VOLUNTEER';
-    const roleColor = user?.role === 'admin' ? 'text-red-400' : 'text-blue-400';
+
+    const searchableLinks = useMemo(() => {
+        return links.map((link) => ({
+            label: link.label,
+            to: link.to,
+            keywords: `${link.label} ${link.to}`.toLowerCase(),
+        }));
+    }, [links]);
+
+    const handleSearchSubmit = (event) => {
+        event.preventDefault();
+        const query = searchValue.trim().toLowerCase();
+        if (!query)
+            return;
+
+        const directMatch = searchableLinks.find((link) => link.label.toLowerCase() === query || link.to.toLowerCase() === query);
+        if (directMatch) {
+            navigate(directMatch.to);
+            return;
+        }
+
+        const firstMatch = searchableLinks.find((link) => link.keywords.includes(query));
+        if (firstMatch) {
+            navigate(firstMatch.to);
+            return;
+        }
+
+        if (query.includes('disaster') || query.includes('incident') || query.includes('report')) {
+            navigate('/disasters');
+            return;
+        }
+        if (query.includes('center') || query.includes('relief')) {
+            navigate('/centers');
+            return;
+        }
+        if (query.includes('inventory') || query.includes('stock') || query.includes('space')) {
+            navigate('/inventory');
+            return;
+        }
+        if (query.includes('volunteer') || query.includes('assign')) {
+            navigate('/volunteers');
+            return;
+        }
+        if (query.includes('dispatch') || query.includes('mission')) {
+            navigate('/dispatch');
+            return;
+        }
+        if (query.includes('map')) {
+            navigate('/map');
+        }
+    };
+
+    useEffect(() => {
+        const handleSlashFocus = (event) => {
+            if (event.key !== '/')
+                return;
+            const target = event.target;
+            if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable))
+                return;
+            const input = document.getElementById('app-global-search');
+            if (input) {
+                event.preventDefault();
+                input.focus();
+            }
+        };
+        window.addEventListener('keydown', handleSlashFocus);
+        return () => window.removeEventListener('keydown', handleSlashFocus);
+    }, []);
     return (<div className="flex h-screen overflow-hidden bg-background">
       {/* Mobile overlay */}
       {sidebarOpen && (<div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={() => setSidebarOpen(false)}/>)}
@@ -50,12 +117,6 @@ export default function AppLayout({ children }) {
           <button className="ml-auto lg:hidden text-muted-foreground" onClick={() => setSidebarOpen(false)}>
             <X className="w-5 h-5"/>
           </button>
-        </div>
-
-        {/* Role badge */}
-        <div className="px-5 py-3 border-b border-sidebar-border">
-          <div className="text-[10px] font-mono text-muted-foreground">ACTIVE ROLE</div>
-          <div className={`text-xs font-bold font-mono ${roleColor}`}>{roleLabel}</div>
         </div>
 
         {/* Nav links */}
@@ -96,6 +157,18 @@ export default function AppLayout({ children }) {
             <Menu className="w-5 h-5"/>
           </button>
           <div className="flex-1"/>
+          <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
+              <input
+                id="app-global-search"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="w-72 lg:w-80 bg-card/80 border border-border rounded-md pl-9 pr-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
+                aria-label="Search navigation"
+              />
+            </div>
+          </form>
           <button
             type="button"
             aria-label="Toggle theme"

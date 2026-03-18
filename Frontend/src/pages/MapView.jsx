@@ -60,7 +60,6 @@ export default function MapView() {
     return (<div className="space-y-4">
       <header>
         <h1 className="command-header">Operations Map</h1>
-        <p className="system-label mt-1">LIVE SPATIAL OVERVIEW</p>
       </header>
 
       <div className="flex items-center gap-6 text-xs">

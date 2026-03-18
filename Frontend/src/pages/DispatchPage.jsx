@@ -123,7 +123,6 @@ export default function DispatchPage() {
       <header className="flex items-center justify-between">
         <div>
           <h1 className="command-header">Dispatch Operations</h1>
-          <p className="system-label mt-1">{dispatches.length} MISSIONS // {dispatches.filter(d => d.status === 'in-transit').length} IN TRANSIT</p>
         </div>
         {canCreate && (<button onClick={() => setShowForm(!showForm)} className={showForm ? 'btn-secondary' : 'btn-success'}>
             {showForm ? <><X className="w-4 h-4 mr-1 inline"/>Cancel</> : <><Plus className="w-4 h-4 mr-1 inline"/>New Dispatch</>}

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api';
-import { AlertTriangle, Loader2, MapPin, Phone, User as UserIcon } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from 'recharts';
+import { AlertTriangle, ArrowUpRight, Clock, Loader2, MapPin, Phone, User as UserIcon } from 'lucide-react';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import DetailCard from '@/components/DetailCard';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
@@ -15,6 +16,19 @@ const chartTooltipStyle = {
     color: 'hsl(var(--popover-foreground))',
     fontSize: '12px',
 };
+
+function buildPastDayLabels(dayCount) {
+    const labels = [];
+    for (let index = dayCount - 1; index >= 0; index -= 1) {
+        const date = new Date();
+        date.setDate(date.getDate() - index);
+        labels.push({
+            key: date.toISOString().slice(0, 10),
+            day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        });
+    }
+    return labels;
+}
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -78,8 +92,10 @@ function AdminDashboard({ data, loading }) {
         const activeDisasters = data.disasters.filter((disaster) => disaster.status === 'active').length;
         const assignedVolunteers = data.volunteers.filter((volunteer) => volunteer.status === 'assigned').length;
         const inTransit = data.dispatches.filter((dispatch) => dispatch.status === 'in-transit').length;
+        const availableVolunteers = data.volunteers.filter((volunteer) => volunteer.status === 'available').length;
+        const unavailableVolunteers = data.volunteers.filter((volunteer) => volunteer.status === 'unavailable').length;
         const resourcesBySpace = data.inventorySpaces.map((space) => ({
-            name: space.name.split(' ')[0],
+            name: String(space.name || space.locationName || space.location || 'Space').split(' ')[0],
             stock: (space.resources || []).reduce((total, resource) => total + resource.quantity, 0),
         }));
         const severityData = [
@@ -88,29 +104,48 @@ function AdminDashboard({ data, loading }) {
             { name: 'Medium', value: data.disasters.filter(d => d.severity === 'Medium').length, color: '#eab308' },
             { name: 'Low', value: data.disasters.filter(d => d.severity === 'Low').length, color: '#22c55e' },
         ].filter(item => item.value > 0);
-        return { activeDisasters, assignedVolunteers, inTransit, resourcesBySpace, severityData };
+        return {
+            activeDisasters,
+            assignedVolunteers,
+            inTransit,
+            availableVolunteers,
+            unavailableVolunteers,
+            resourcesBySpace,
+            severityData,
+        };
     }, [data]);
 
     const dispatchTrend = useMemo(() => {
-        const labels = [];
-        for (let index = 6; index >= 0; index -= 1) {
-            const date = new Date();
-            date.setDate(date.getDate() - index);
-            labels.push({
-                key: date.toISOString().slice(0, 10),
-                day: date.toLocaleDateString('en-US', { weekday: 'short' }),
-            });
-        }
+        const labels = buildPastDayLabels(7);
         return labels.map((label) => ({
             day: label.day,
             dispatches: data.dispatches.filter((dispatch) => dispatch.dispatchedAt?.slice(0, 10) === label.key).length,
         }));
     }, [data.dispatches]);
 
+    const disasterTrend = useMemo(() => {
+        const labels = buildPastDayLabels(14);
+        return labels.map((label) => ({
+            day: label.day,
+            reports: data.disasters.filter((disaster) => disaster.createdAt?.slice(0, 10) === label.key).length,
+        }));
+    }, [data.disasters]);
+
+    const recentDisasters = useMemo(() => {
+        const copy = [...data.disasters];
+        copy.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        return copy.slice(0, 6);
+    }, [data.disasters]);
+
+    const recentDispatches = useMemo(() => {
+        const copy = [...data.dispatches];
+        copy.sort((a, b) => new Date(b.dispatchedAt || 0) - new Date(a.dispatchedAt || 0));
+        return copy.slice(0, 6);
+    }, [data.dispatches]);
+
     return (<div className="space-y-6">
       <header>
         <h1 className="command-header">Command Overview</h1>
-        <p className="system-label mt-1">SYSTEM_STATUS: OPERATIONAL // ADMIN DASHBOARD</p>
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -120,10 +155,10 @@ function AdminDashboard({ data, loading }) {
         <StatCard label="Assigned Volunteers" value={loading ? '...' : assignedLabel(summary.assignedVolunteers, data.volunteers.length)}/>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-card border border-border rounded-lg p-4">
           <h3 className="system-label mb-4">Resources by Space</h3>
-          <div className="h-64">
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={summary.resourcesBySpace}>
                 <XAxis dataKey="name" stroke={chartAxisStroke} fontSize={11}/>
@@ -137,7 +172,7 @@ function AdminDashboard({ data, loading }) {
 
         <div className="bg-card border border-border rounded-lg p-4">
           <h3 className="system-label mb-4">Severity Distribution</h3>
-          <div className="h-64 flex items-center justify-center">
+          <div className="h-72 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={summary.severityData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value">
@@ -151,7 +186,7 @@ function AdminDashboard({ data, loading }) {
 
         <div className="bg-card border border-border rounded-lg p-4">
           <h3 className="system-label mb-4">Dispatch Activity</h3>
-          <div className="h-64">
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dispatchTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke}/>
@@ -161,6 +196,170 @@ function AdminDashboard({ data, loading }) {
                 <Line type="monotone" dataKey="dispatches" stroke="hsl(142 71% 45%)" strokeWidth={2} dot={{ fill: 'hsl(142 71% 45%)' }}/>
               </LineChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-lg p-4">
+          <h3 className="system-label mb-4">New Disaster Reports</h3>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={disasterTrend}>
+                <defs>
+                  <linearGradient id="reportsGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(0 84% 60%)" stopOpacity={0.35}/>
+                    <stop offset="95%" stopColor="hsl(0 84% 60%)" stopOpacity={0.05}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke}/>
+                <XAxis dataKey="day" stroke={chartAxisStroke} fontSize={11}/>
+                <YAxis stroke={chartAxisStroke} fontSize={11} allowDecimals={false}/>
+                <Tooltip contentStyle={chartTooltipStyle}/>
+                <Area type="monotone" dataKey="reports" stroke="hsl(0 84% 60%)" strokeWidth={2} fill="url(#reportsGradient)"/>
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2 bg-card border border-border rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <h3 className="system-label">Recent Disasters</h3>
+            <Link to="/disasters" className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+              View all <ArrowUpRight className="w-3.5 h-3.5"/>
+            </Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-secondary/30">
+                <tr>
+                  <th className="table-header">Type</th>
+                  <th className="table-header">Location</th>
+                  <th className="table-header">Severity</th>
+                  <th className="table-header">Status</th>
+                  <th className="table-header">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && (<tr>
+                    <td className="table-cell text-muted-foreground" colSpan={5}>Loading disasters...</td>
+                  </tr>)}
+                {!loading && recentDisasters.length === 0 && (<tr>
+                    <td className="table-cell text-muted-foreground" colSpan={5}>No disasters found</td>
+                  </tr>)}
+                {recentDisasters.map((disaster) => (
+                  <tr key={disaster._id} className="hover:bg-secondary/20 transition-colors">
+                    <td className="table-cell font-medium">{disaster.type || '-'}</td>
+                    <td className="table-cell text-xs text-muted-foreground">{disaster.locationName || disaster.location || '-'}</td>
+                    <td className="table-cell">
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold border severity-${String(disaster.severity || 'medium').toLowerCase()}`}>
+                        {disaster.severity || 'Medium'}
+                      </span>
+                    </td>
+                    <td className="table-cell">
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium status-${String(disaster.status || 'active').toLowerCase()}`}>
+                        {disaster.status || 'active'}
+                      </span>
+                    </td>
+                    <td className="table-cell font-mono text-xs text-muted-foreground">
+                      {disaster.createdAt ? new Date(disaster.createdAt).toLocaleDateString() : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="system-label">Quick Actions</h3>
+            <div className="text-[10px] font-mono text-muted-foreground inline-flex items-center gap-1">
+              <Clock className="w-3 h-3"/> {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2">
+            <Link to="/disasters?report=true" className="btn-destructive text-center">Report Disaster</Link>
+            <Link to="/dispatch" className="btn-success text-center">Authorize Dispatch</Link>
+            <Link to="/volunteers" className="btn-primary text-center">Assign Volunteers</Link>
+            <Link to="/map" className="btn-secondary text-center">Open Map View</Link>
+          </div>
+
+          <div className="bg-secondary/20 border border-border rounded-lg p-3 space-y-2">
+            <div className="text-xs font-bold text-foreground">Operational Highlights</div>
+            <div className="text-xs text-muted-foreground space-y-1">
+              <div>- {summary.inTransit} dispatches currently in transit</div>
+              <div>- {summary.availableVolunteers} volunteers available</div>
+              <div>- {summary.unavailableVolunteers} volunteers unavailable</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <h3 className="system-label">Recent Dispatches</h3>
+            <Link to="/dispatch" className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+              View all <ArrowUpRight className="w-3.5 h-3.5"/>
+            </Link>
+          </div>
+          <div className="divide-y divide-border">
+            {loading && (
+              <div className="px-4 py-3 text-sm text-muted-foreground">Loading dispatches...</div>
+            )}
+            {!loading && recentDispatches.length === 0 && (
+              <div className="px-4 py-3 text-sm text-muted-foreground">No dispatches found</div>
+            )}
+            {recentDispatches.map((dispatch) => (
+              <div key={dispatch._id} className="px-4 py-3 flex items-start justify-between gap-3 hover:bg-secondary/20 transition-colors">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium truncate">{dispatch.toName || 'Dispatch destination'}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    From {dispatch.fromInventorySpace?.name || 'inventory'} • {dispatch.resources?.length || 0} item(s)
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className={`px-2 py-0.5 rounded text-xs font-medium inline-block ${dispatch.status === 'delivered' ? 'status-resolved' : 'status-contained'}`}>
+                    {dispatch.status || 'in-transit'}
+                  </div>
+                  <div className="text-[11px] font-mono text-muted-foreground mt-1">
+                    {dispatch.dispatchedAt ? new Date(dispatch.dispatchedAt).toLocaleDateString() : '-'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+          <h3 className="system-label">Volunteer Readiness</h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <DetailCard label="Available" value={loading ? '...' : summary.availableVolunteers}/>
+            <DetailCard label="Assigned" value={loading ? '...' : summary.assignedVolunteers}/>
+            <DetailCard label="Unavailable" value={loading ? '...' : summary.unavailableVolunteers}/>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Availability</span>
+              <span className="font-mono">
+                {loading || data.volunteers.length === 0 ? '—' : `${Math.round((summary.availableVolunteers / data.volunteers.length) * 100)}%`}
+              </span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-secondary/30 overflow-hidden">
+              <div
+                className="h-full bg-primary"
+                style={{
+                    width: loading || data.volunteers.length === 0 ? '0%' : `${(summary.availableVolunteers / data.volunteers.length) * 100}%`,
+                }}
+              />
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {loading ? 'Loading volunteer roster...' : 'Aim to keep availability above 40% during peak activity.'}
+            </div>
           </div>
         </div>
       </div>
@@ -288,7 +487,6 @@ function VolunteerDashboard({ user }) {
     return (<div className="space-y-6">
       <header>
         <h1 className="command-header">Volunteer Dashboard</h1>
-        <p className="system-label mt-1">WELCOME, {user?.name?.toUpperCase()} // FIELD STATUS</p>
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -114,7 +114,6 @@ export default function Disasters() {
       <header className="flex items-center justify-between">
         <div>
           <h1 className="command-header">{isPublicUser ? 'Report Disaster' : 'Disaster Events'}</h1>
-          <p className="system-label mt-1">{isPublicUser ? 'SUBMIT A NEW INCIDENT REPORT' : `MONITORING ${disasters.length} EVENTS`}</p>
         </div>
         {!isPublicUser && canCreate && (<button onClick={() => {
             const nextValue = !showForm;

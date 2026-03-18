@@ -95,7 +95,6 @@ export default function Volunteers() {
       <header className="flex items-center justify-between">
         <div>
           <h1 className="command-header">Volunteer Assignment</h1>
-          <p className="system-label mt-1">{volunteers.length} VOLUNTEERS // {volunteers.filter(v => v.status === 'available').length} AVAILABLE // {volunteers.filter(v => v.status === 'assigned').length} ASSIGNED // {volunteers.filter(v => v.status === 'unavailable').length} UNAVAILABLE</p>
         </div>
       </header>
 

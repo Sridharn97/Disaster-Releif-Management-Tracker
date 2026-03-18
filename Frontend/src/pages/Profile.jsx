@@ -88,7 +88,6 @@ export default function Profile() {
         <div className="space-y-6">
           <header>
             <h1 className="command-header">Profile</h1>
-            <p className="system-label mt-1">PERSONNEL RECORD // UPDATE VOLUNTEER DETAILS</p>
           </header>
 
           {pageError && <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 px-3 py-2 rounded-md">{pageError}</div>}

@@ -146,7 +146,6 @@ export default function Inventory() {
       <header className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="command-header">Inventory Spaces</h1>
-          <p className="system-label mt-1">{inventorySpaces.length} STORAGE HUBS TRACKED</p>
         </div>
         <button onClick={() => { setShowForm(!showForm); setEditId(null); setForm(createEmptyForm()); }} className={showForm ? 'btn-secondary' : 'btn-primary'}>
           {showForm ? <><X className="w-4 h-4 mr-1 inline"/>Cancel</> : <><Plus className="w-4 h-4 mr-1 inline"/>Add Inventory Space</>}
