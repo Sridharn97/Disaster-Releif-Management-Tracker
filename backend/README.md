@@ -15,7 +15,13 @@ Production-ready Express and MongoDB API for the Disaster Relief Resource Tracke
 - `MONGO_URI=<mongodb connection string>`
 - `JWT_SECRET=replace-with-a-strong-secret`
 - `CLIENT_URL=<frontend production url>`
-- `CORS_ORIGIN=http://localhost:5173`
+- `CORS_ORIGIN=<comma-separated allowed origins>`
+- `CORS_ORIGIN_REGEX=<optional regex for allowed origins>`
+
+Notes:
+- `CLIENT_URL` / `CORS_ORIGIN` are normalized (trailing `/` removed) before matching.
+- By default, the API also allows your Vercel app + preview URLs matching:
+  `https://disaster-releif-management-tracker(-<preview>).vercel.app`
 
 ## Base URL
 
@@ -117,7 +123,8 @@ api.interceptors.request.use((config) => {
   - `PORT=5000`
   - `MONGO_URI=<mongodb atlas connection string>`
   - `JWT_SECRET=<secure random string>`
-  - `CLIENT_URL=<your vercel frontend url>`
+  - `CLIENT_URL=https://disaster-releif-management-tracker.vercel.app`
+  - `CORS_ORIGIN=https://disaster-releif-management-tracker.vercel.app`
 
 ### Frontend on Vercel
 

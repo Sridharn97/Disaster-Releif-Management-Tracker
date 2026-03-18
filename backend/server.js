@@ -17,23 +17,51 @@ connectDB();
 
 const app = express();
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:8080",
-  process.env.CLIENT_URL,
-  process.env.CORS_ORIGIN
-].filter(Boolean);
+const normalizeOrigin = (value) => {
+  if (!value) return "";
+  return value.trim().replace(/\/+$/, "");
+};
+
+const envOrigins = [process.env.CLIENT_URL, process.env.CORS_ORIGIN]
+  .filter(Boolean)
+  .flatMap((value) => value.split(","))
+  .map(normalizeOrigin)
+  .filter(Boolean);
+
+const allowedOrigins = new Set(
+  [
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "http://localhost:3000",
+    ...envOrigins,
+  ].map(normalizeOrigin)
+);
+
+const vercelDefaultRegex = /^https:\/\/disaster-releif-management-tracker(-[a-z0-9-]+)?\.vercel\.app$/i;
+const vercelOriginRegex = process.env.CORS_ORIGIN_REGEX
+  ? new RegExp(process.env.CORS_ORIGIN_REGEX, "i")
+  : vercelDefaultRegex;
 
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    const normalized = normalizeOrigin(origin);
+
+    if (!normalized) {
       callback(null, true);
       return;
     }
 
-    callback(new Error("CORS not allowed for this origin"));
+    if (allowedOrigins.has(normalized) || vercelOriginRegex.test(normalized)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`CORS not allowed for origin: ${normalized}`));
   },
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
@@ -62,5 +90,6 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Allowed CORS origins: ${allowedOrigins.join(", ")}`);
+  console.log(`Allowed CORS origins: ${Array.from(allowedOrigins).join(", ")}`);
+  console.log(`Allowed Vercel origins: ${vercelOriginRegex}`);
 });
