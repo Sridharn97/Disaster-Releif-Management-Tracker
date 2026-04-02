@@ -2,7 +2,7 @@
 
 ReliefGrid is a production-ready, comprehensive platform designed to streamline disaster relief operations. It enables real-time tracking of disasters, efficient management of relief centers, inventory control, and volunteer coordination.
 
-![ReliefGrid Dashboard](https://images.unsplash.com/photo-1527489377706-5bf97e608892?auto=format&fit=crop&q=80&w=2000)
+
 
 ## 🚀 Features
 
